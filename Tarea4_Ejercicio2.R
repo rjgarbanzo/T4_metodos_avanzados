@@ -47,38 +47,142 @@ deteccion.si.gentle <- c()
 
 for(i in 1:cantidad.validacion.cruzada){
   grupos  <- createFolds(1:numero.filas, cantidad.grupos) 
-  si.discrete <- c()
-  si.real <- c()
-  si.gentle <- c()
+  si.discrete <- 0
+  si.real <- 0
+  si.gentle <- 0
   
-
+  
   for(k in 1:cantidad.grupos) {
     muestra <- grupos[[k]]  
     ttesting <- datos[muestra, ]
     taprendizaje <- datos[-muestra, ]
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 200 , type = 'discrete', control = rpart.control(minsplit = 2,maxdepth = 5))
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10 , type = 'discrete')
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     si.discrete <- si.discrete + MC[2, 2] # Detección DejaBanco
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 200, type = 'real', control = rpart.control(minsplit = 2,maxdepth = 5) )
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'real')
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     si.real <- si.real + MC[2, 2] # Detección DejaBanco
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 200, type = 'gentle', control = rpart.control(minsplit = 2,maxdepth = 5) )
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     si.gentle <- si.gentle + MC[2, 2] # Detección DejaBanco
-
+    
   }
   
   deteccion.si.discrete[i] <- si.discrete
   deteccion.si.real[i] <- si.real
   deteccion.si.gentle[i] <- si.gentle
-
+  
 }
+
+
+resultados <- data.frame("discrete"     = deteccion.si.discrete,
+                         "real"     = deteccion.si.real,
+                         "gentle" = deteccion.si.gentle) # Preparamos los datos
+
+par(oma=c(0, 0, 0, 5)) # Hace espacio para la leyenda
+
+matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
+        main = "Detección Deja Banco", 
+        xlab = "Número de iteración",
+        ylab = "Cantidad de Deja Banco",
+        col = rainbow(ncol(resultados)))
+legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
+       pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+
+
+
+
+
+
+# e) Repita el ejercicio anterior, pero esta vez en lugar de sumar la cantidad de 1’s, promedie los
+# errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones
+# para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
+# algoritmo es el mejor?
+
+numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <-5
+cantidad.grupos <- 10
+
+deteccion.error.discrete <- c()
+deteccion.error.real <- c()
+deteccion.error.gentle <- c()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos) 
+  error.discrete <- 0
+  error.real <- 0
+  error.gentle <- 0
+  
+  
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10 , type = 'discrete')
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    error.discrete <- error.discrete + MC[2, 2] # Detección DejaBanco
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'real')
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    error.real <- error.real + MC[2, 2] # Detección DejaBanco
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    error.gentle <- error.gentle + MC[2, 2] # Detección DejaBanco
+    
+  }
+  
+  deteccion.error.discrete[i] <- error.discrete
+  deteccion.error.real[i] <- error.real
+  deteccion.error.gentle[i] <- error.gentle
+  
+}
+
+
+resultados <- data.frame("discrete"     = deteccion.si.discrete,
+                         "real"     = deteccion.si.real,
+                         "gentle" = deteccion.si.gentle) # Preparamos los datos
+
+par(oma=c(0, 0, 0, 8)) # Hace espacio para la leyenda
+
+matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
+        main = "Comparacion Error Global", 
+        xlab = "Número de iteración",
+        ylab = "Porcentaje Error Global",
+        col = rainbow(ncol(resultados)))
+legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA, cex = 0.8,
+       pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+
+
+
+
+
+
+
+
+
+# e) Repita el ejercicio anterior, pero esta vez en lugar de sumar la cantidad de 1’s, promedie los
+# errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones
+# para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
+# algoritmo es el mejor?
+
+muestra <- sample(1:nrow(datos),floor(nrow(datos)*0.30))
+ttesting <- datos[muestra,]
+taprendizaje <- datos[-muestra,]
+modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
+prediccion <- predict(modelo, ttesting)
+MC <- confusion.matrix(ttesting, prediccion)
+error.gentle <- error.gentle + MC[2, 2] # Detección DejaBanco
 
 
 
