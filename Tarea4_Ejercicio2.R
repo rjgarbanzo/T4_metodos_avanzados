@@ -176,13 +176,85 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
 # para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
 # algoritmo es el mejor?
 
-muestra <- sample(1:nrow(datos),floor(nrow(datos)*0.30))
-ttesting <- datos[muestra,]
-taprendizaje <- datos[-muestra,]
-modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
-prediccion <- predict(modelo, ttesting)
-MC <- confusion.matrix(ttesting, prediccion)
-error.gentle <- error.gentle + MC[2, 2] # Detección DejaBanco
+#calculo de indices
+indices.general <- function(MC) {
+  precision.global <- sum(diag(MC))/sum(MC)
+  error.global <- 1 - precision.global
+  precision.categoria <- diag(MC)/rowSums(MC)
+  res <- list(matriz.confusion = MC, precision.global = precision.global, error.global = error.global,
+              precision.categoria = precision.categoria)
+  names(res) <- c("Matriz de Confusión", "Precisión Global", "Error Global",
+                  "Precisión por categoría")
+  return(res)
+}
+
+
+numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <-5
+cantidad.grupos <- 10
+
+deteccion.error.discrete <- c()
+deteccion.error.real <- c()
+deteccion.error.gentle <- c()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos) 
+  error.discrete <- 0
+  error.real <- 0
+  error.gentle <- 0
+  
+  
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10 , type = 'discrete')
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.discrete <- error.discrete + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'real')
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.real <- error.real + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.gentle <- error.gentle + Error.Global$`Error Global` # Detección DejaBanco
+    
+  }
+  
+  error.discrete <- error.discrete/10
+  error.real <- error.real/10
+  error.gentle <- error.gentle/10
+  
+  deteccion.error.discrete[i] <- error.discrete
+  deteccion.error.real[i] <- error.real
+  deteccion.error.gentle[i] <- error.gentle
+  
+}
+
+
+
+
+resultados <- data.frame("discrete"     = deteccion.si.discrete,
+                         "real"     = deteccion.si.real,
+                         "gentle" = deteccion.si.gentle) # Preparamos los datos
+
+par(oma=c(0, 0, 0, 8)) # Hace espacio para la leyenda
+
+matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
+        main = "Comparacion Error Global", 
+        xlab = "Número de iteración",
+        ylab = "Porcentaje Error Global",
+        col = rainbow(ncol(resultados)))
+legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA, cex = 0.8,
+       pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 
 
 
