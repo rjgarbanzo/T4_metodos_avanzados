@@ -242,9 +242,9 @@ for(i in 1:cantidad.validacion.cruzada){
 
 
 
-resultados <- data.frame("discrete"     = deteccion.si.discrete,
-                         "real"     = deteccion.si.real,
-                         "gentle" = deteccion.si.gentle) # Preparamos los datos
+resultados <- data.frame("discrete" = deteccion.error.discrete,
+                         "real" = deteccion.error.real,
+                         "gentle" = deteccion.error.gentle) # Preparamos los datos
 
 par(oma=c(0, 0, 0, 8)) # Hace espacio para la leyenda
 
@@ -257,7 +257,9 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 
 
-
+#R/
+# El Analizar el error global se obtiene un menor error global con el algoritmo de gentle
+  
 
 
 
