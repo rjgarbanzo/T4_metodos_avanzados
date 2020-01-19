@@ -2,7 +2,9 @@
 # 3. [20 puntos] Para esta pregunta usaremos nuevamente los datos Datos Churn.csv. Usando el
 # paquete traineR realice lo siguiente:
 
-install.packages("traineR")
+#Punto A
+
+#install.packages("traineR")
 
 library(caret)
 library(traineR)
@@ -146,26 +148,59 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
 
 
 
+###############################################################################
 
+#Punto B
+library(caret)
+library(traineR)
 
-# e) Repita el ejercicio anterior, pero esta vez en lugar de sumar la cantidad de 1’s, promedie los
-# errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones
-# para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
-# algoritmo es el mejor?
+datos <- read.csv("Datos_Churn.csv",header=TRUE, sep=",", dec=".")
+datos <- datos[, -c(1,4,2,7)]
+datos <- na.omit(datos)
+
+datos$TarjetaCredito <- factor(datos$TarjetaCredito, ordered = T)
+datos$Activo <- factor(datos$Activo, ordered = T)
+datos$DejaBanco <- factor(datos$DejaBanco, ordered = T)
+
+#calculo de indices
+indices.general <- function(MC) {
+  precision.global <- sum(diag(MC))/sum(MC)
+  error.global <- 1 - precision.global
+  precision.categoria <- diag(MC)/rowSums(MC)
+  res <- list(matriz.confusion = MC, precision.global = precision.global, error.global = error.global,
+              precision.categoria = precision.categoria)
+  names(res) <- c("Matriz de Confusión", "Precisión Global", "Error Global",
+                  "Precisión por categoría")
+  return(res)
+}
+
 
 numero.filas <- nrow(datos)
-cantidad.validacion.cruzada <-5
-cantidad.grupos <- 10
+cantidad.validacion.cruzada <- 2
+cantidad.grupos <- 2
 
-deteccion.error.discrete <- c()
-deteccion.error.real <- c()
-deteccion.error.gentle <- c()
+
+deteccion.error.rectangular <- c()
+deteccion.error.triangular <- c()
+deteccion.error.epanechnikov <- c()
+deteccion.error.biweight <- c()
+deteccion.error.triweight <- c()
+deteccion.error.cos <- c()
+deteccion.error.inv <- c()
+deteccion.error.gaussian <- c()
+deteccion.error.optimal <- c()
 
 for(i in 1:cantidad.validacion.cruzada){
   grupos  <- createFolds(1:numero.filas, cantidad.grupos) 
-  error.discrete <- 0
-  error.real <- 0
-  error.gentle <- 0
+  error.rectangular <- 0
+  error.triangular <- 0
+  error.epanechnikov <- 0
+  error.biweight <- 0
+  error.triweight <- 0
+  error.cos <- 0
+  error.inv <- 0
+  error.gaussian <- 0
+  error.optimal <- 0
   
   
   for(k in 1:cantidad.grupos) {
@@ -173,40 +208,98 @@ for(i in 1:cantidad.validacion.cruzada){
     ttesting <- datos[muestra, ]
     taprendizaje <- datos[-muestra, ]
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10 , type = 'discrete')
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "rectangular")
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
-    error.discrete <- error.discrete + MC[2, 2] # Detección DejaBanco
+    Error.Global <- indices.general(MC)
+    error.rectangular <- error.rectangular + Error.Global$`Error Global` # Detección DejaBanco
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'real')
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "triangular")
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
-    error.real <- error.real + MC[2, 2] # Detección DejaBanco
+    Error.Global <- indices.general(MC)
+    error.triangular <- error.triangular + Error.Global$`Error Global` # Detección DejaBanco
     
-    modelo <- train.ada(formula = DejaBanco ~ ., data = taprendizaje, iter = 10, type = 'gentle' )
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "epanechnikov")
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
-    error.gentle <- error.gentle + MC[2, 2] # Detección DejaBanco
+    Error.Global <- indices.general(MC)
+    error.epanechnikov <- error.epanechnikov + Error.Global$`Error Global` # Detección DejaBanco
     
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "biweight")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.biweight <- error.biweight + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "triweight")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.triweight <- error.triweight + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "cos")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.cos <- error.cos + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "inv")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.inv <- error.inv + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "gaussian")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.gaussian <- error.gaussian + Error.Global$`Error Global` # Detección DejaBanco
+    
+    modelo <- train.knn(formula = DejaBanco~., data = taprendizaje, kmax = 3, kernel = "optimal")
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    Error.Global <- indices.general(MC)
+    error.optimal <- error.optimal + Error.Global$`Error Global` # Detección DejaBanco
   }
   
-  deteccion.error.discrete[i] <- error.discrete
-  deteccion.error.real[i] <- error.real
-  deteccion.error.gentle[i] <- error.gentle
+  deteccion.error.rectangular[i] <- error.rectangular
+  deteccion.error.triangular[i] <- error.triangular
+  deteccion.error.epanechnikov[i] <- error.epanechnikov
+  deteccion.error.biweight[i] <- error.biweight
+  deteccion.error.triweight[i] <- error.triweight
+  deteccion.error.cos[i] <- error.cos
+  deteccion.error.inv[i] <- error.inv
+  deteccion.error.gaussian[i] <- error.gaussian
+  deteccion.error.optimal[i] <- error.optimal
   
 }
 
 
-resultados <- data.frame("discrete"     = deteccion.si.discrete,
-                         "real"     = deteccion.si.real,
-                         "gentle" = deteccion.si.gentle) # Preparamos los datos
+resultados <- data.frame("rectangular" = deteccion.error.rectangular,
+                         "triangular" = deteccion.error.triangular,
+                         "epanechnikov" = deteccion.error.epanechnikov,
+                         "biweight" = deteccion.error.biweight,
+                         "triweight" = deteccion.error.triweight,
+                         "cos" = deteccion.error.cos,
+                         "inv" = deteccion.error.inv,
+                         "gaussian" = deteccion.error.gaussian,
+                         "optimal" = deteccion.error.optimal)
 
-par(oma=c(0, 0, 0, 8)) # Hace espacio para la leyenda
+par(oma=c(0, 0, 0, 5)) # Hace espacio para la leyenda
 
 matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
-        main = "Comparacion Error Global", 
+        main = "Detección Deja Banco", 
         xlab = "Número de iteración",
-        ylab = "Porcentaje Error Global",
+        ylab = "Cantidad de Deja Banco",
         col = rainbow(ncol(resultados)))
-legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA, cex = 0.8,
+legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+
+
+
+#Punto C
+
+#El algoritmo COS presenta una mejor calibración y menor error global claramente visible en el gráfico.
+
+
