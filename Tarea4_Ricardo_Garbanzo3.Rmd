@@ -1,24 +1,30 @@
-#Ejercicio 3
-# 3. [20 puntos] Para esta pregunta usaremos nuevamente los datos Datos Churn.csv. Usando el
-# paquete traineR realice lo siguiente:
+---
+title: "Tarea4_Ricardo_Garbanzo3"
+output: html_document
+---
 
-#Punto A
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-#install.packages("traineR")
+# Ejercicio 3
+3. [20 puntos] Para esta pregunta usaremos nuevamente los datos Datos Churn.csv. Usando el
+paquete traineR realice lo siguiente:
 
+A ) El objetivo de este ejercicio es calibrar el metodo de kknn para esta Tabla de Datos. Aquı
+interesa predecir en la variable DejaBanco que indica si el cliente deja sus negocios con
+el banco (1) o no (0). Para esto genere 5 Validaciones Cruzadas con 10 grupos calibrando■
+el modelo de acuerdo con todos los tipos de algoritmos que permite train.kknn en
+el parametro kernel, estos algoritmos son: rectangular, triangular, epanechnikov,
+biweight, triweight, cos, inv, gaussian y optimal. Para medir la calidad de metodo
+sume la cantidad de 1’s detectados en los diferentes grupos. Luego grafique las 5 iteraciones
+para todos algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
+algoritmo es el mejor? Para generar los modelos predictivos use el paquete traineR.
+
+
+```{r }
 library(caret)
 library(traineR)
-# 
-# El objetivo de este ejercicio es calibrar el metodo de kknn para esta Tabla de Datos. Aquı
-# interesa predecir en la variable DejaBanco que indica si el cliente deja sus negocios con
-# el banco (1) o no (0). Para esto genere 5 Validaciones Cruzadas con 10 grupos calibrando
-# el modelo de acuerdo con todos los tipos de algoritmos que permite train.kknn en
-# el parametro kernel, estos algoritmos son: rectangular, triangular, epanechnikov,
-# biweight, triweight, cos, inv, gaussian y optimal. Para medir la calidad de metodo
-# sume la cantidad de 1’s detectados en los diferentes grupos. Luego grafique las 5 iteraciones
-# para todos algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
-# algoritmo es el mejor? Para generar los modelos predictivos use el paquete traineR.
-
 
 datos <- read.csv("Datos_Churn.csv",header=TRUE, sep=",", dec=".")
 datos <- datos[, -c(1,4,2,7)]
@@ -30,8 +36,8 @@ datos$DejaBanco <- factor(datos$DejaBanco, ordered = T)
 str(datos)
 
 numero.filas <- nrow(datos)
-cantidad.validacion.cruzada <- 2
-cantidad.grupos <- 2
+cantidad.validacion.cruzada <- 5
+cantidad.grupos <- 10
 
 
 deteccion.si.rectangular <- c()
@@ -142,15 +148,13 @@ matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
         col = rainbow(ncol(resultados)))
 legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+```
 
+## Respuesta
+El algoritmo COS presenta una mejor estimación del 1 - DejaBanco.
 
-
-
-
-
-###############################################################################
-
-#Punto B
+## Punto B
+```{r pressure, echo=FALSE}
 library(caret)
 library(traineR)
 
@@ -176,8 +180,8 @@ indices.general <- function(MC) {
 
 
 numero.filas <- nrow(datos)
-cantidad.validacion.cruzada <- 2
-cantidad.grupos <- 2
+cantidad.validacion.cruzada <- 5
+cantidad.grupos <- 10
 
 
 deteccion.error.rectangular <- c()
@@ -263,15 +267,17 @@ for(i in 1:cantidad.validacion.cruzada){
     error.optimal <- error.optimal + Error.Global$`Error Global` # Detección DejaBanco
   }
   
-  deteccion.error.rectangular[i] <- error.rectangular
-  deteccion.error.triangular[i] <- error.triangular
-  deteccion.error.epanechnikov[i] <- error.epanechnikov
-  deteccion.error.biweight[i] <- error.biweight
-  deteccion.error.triweight[i] <- error.triweight
-  deteccion.error.cos[i] <- error.cos
-  deteccion.error.inv[i] <- error.inv
-  deteccion.error.gaussian[i] <- error.gaussian
-  deteccion.error.optimal[i] <- error.optimal
+  
+  
+  deteccion.error.rectangular[i] <- error.rectangular/cantidad.grupos
+  deteccion.error.triangular[i] <- error.triangular/cantidad.grupos
+  deteccion.error.epanechnikov[i] <- error.epanechnikov/cantidad.grupos
+  deteccion.error.biweight[i] <- error.biweight/cantidad.grupos
+  deteccion.error.triweight[i] <- error.triweight/cantidad.grupos
+  deteccion.error.cos[i] <- error.cos/cantidad.grupos
+  deteccion.error.inv[i] <- error.inv/cantidad.grupos
+  deteccion.error.gaussian[i] <- error.gaussian/cantidad.grupos
+  deteccion.error.optimal[i] <- error.optimal/cantidad.grupos
   
 }
 
@@ -296,10 +302,9 @@ matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
 legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 
+```
 
 
 # Punto C
 
-## El algoritmo COS presenta una mejor calibración y menor error global claramente visible en el gráfico.
-
-
+El algoritmo rectangular presenta un menor error global claramente visible en el gráfico, mas no así mejor asierto del Sí.
