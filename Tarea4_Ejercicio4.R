@@ -287,6 +287,19 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
 # (metrica de calidad) la precision global (Accuracy). Usando la funcion
 # indices.general(...) determine cual es el mejor metodo.
 
+#calculo de indices
+indices.general <- function(MC) {
+  precision.global <- sum(diag(MC))/sum(MC)
+  error.global <- 1 - precision.global
+  precision.categoria <- diag(MC)/rowSums(MC)
+  res <- list(matriz.confusion = MC, precision.global = precision.global, error.global = error.global,
+              precision.categoria = precision.categoria)
+  names(res) <- c("Matriz de Confusión", "Precisión Global", "Error Global",
+                  "Precisión por categoría")
+  return(res)
+}
+
+
 library(caret)
 
 datos <- read.csv("Datos_Churn.csv", header=TRUE, sep=",", dec=".")
@@ -304,6 +317,74 @@ muestra <- createDataPartition(datos$DejaBanco, p = 0.7, list = F)
 tabla.datos.vc <- datos[muestra,]
 # 30% para prueba
 tabla.validacion <- datos[-muestra,]
+
+
+# SVM Kernel Radial = “svmRadial”
+# k-nearest neighbors = “kknn”
+# decision tree = “rpart”
+# AdaBoost = “adaboost”
+# eXtreme Gradient Boosting = “xgbTree”
+# Naive Bayes = “naive_bayes”
+# Generalized Linear Model = “glm”
+
+# Validación cruzada con 10 folds
+control <- trainControl(method = "cv", number = 2)
+
+svmRadial.model <- train(DejaBanco~., data = tabla.datos.vc, method = "svmRadial",trControl = control, metric = "Accuracy", verbose = FALSE)
+kknn.model <- train(DejaBanco~., data = tabla.datos.vc, method = "kknn",trControl = control, metric = "Accuracy", verbose = FALSE)
+rpart.model <- train(DejaBanco~., data = tabla.datos.vc, method = "rpart",trControl = control, metric = "Accuracy")
+adaboost.model <- train(DejaBanco~., data = tabla.datos.vc, method = "adaboost",trControl = control, metric = "Accuracy", verbose = FALSE)
+boosting.model <- train(DejaBanco~., data = tabla.datos.vc, method = "xgbTree",trControl = control, metric = "Accuracy", verbose = FALSE)
+naive_bayes.model <- train(DejaBanco~., data = tabla.datos.vc, method = "naive_bayes",trControl = control, metric = "Accuracy", verbose = FALSE)
+glm.model <- train(DejaBanco~., data = tabla.datos.vc, method = "glm",trControl = control, metric = "Accuracy")
+
+
+prediccion.svmRadial <- predict(svmRadial.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.svmRadial)
+svmRadial.ind <- indices.general(MC)
+svmRadial.ind$`Precisión Global`
+
+prediccion.kknn <- predict(kknn.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.kknn)
+kknn.ind <- indices.general(MC)
+kknn.ind$`Precisión Global`
+
+prediccion.rpart <- predict(rpart.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.rpart)
+rpart.ind <- indices.general(MC)
+rpart.ind$`Precisión Global`
+
+prediccion.adaboost <- predict(adaboost.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.adaboost)
+adaboost.ind <- indices.general(MC)
+adaboost.ind$`Precisión Global`
+
+prediccion.xgbTree <- predict(boosting.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.xgbTree)
+boosting.ind <- indices.general(MC)
+boosting.ind$`Precisión Global`
+
+prediccion.naive_bayes <- predict(naive_bayes.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.naive_bayes)
+naive_bayes.ind <- indices.general(MC)
+naive_bayes.ind$`Precisión Global`
+
+prediccion.glm <- predict(glm.model, tabla.validacion[,-9])
+MC <- table(tabla.validacion$DejaBanco,prediccion.glm)
+glm.ind <- indices.general(MC)
+glm.ind$`Precisión Global`
+
+
+# Según la precision gloabal el mejor método obtenido es el de boosting con una precision global del 86%
+
+
+
+
+
+
+
+
+
 
 
 
