@@ -115,7 +115,7 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 ```
 
-
+## El algorimo de gentle se coloca como la mejor predicción del si
 
 
 
