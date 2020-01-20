@@ -1,16 +1,28 @@
-#Ejercicio 2
-# A 
-# Cargue la tabla de datos Datos Churn.csv en R y ejecute un str(...), summary(...)
-# y un dim(...), verifique la correcta lectura de los datos, recuerde que IdCliente es el
-# identificador de fila.
+---
+title: "Tarea4_Ricardo_Garbanzo2"
+author: "Ricardo Garbanzo"
+date: "19/1/2020"
+output: html_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejercicio 2
+Punto A
+Cargue la tabla de datos Datos Churn.csv en R y ejecute un str(...), summary(...)
+y un dim(...), verifique la correcta lectura de los datos, recuerde que IdCliente es el
+identificador de fila.
+
+```{r }
 datos <- read.csv("Datos_Churn.csv",header=TRUE, sep=",", dec=".")
 str(datos)
 summary(datos)
 dim(datos)
 
 
-#b) Elimine las variables de valor ´unico, es decir, las variables Apellido y IdCuenta
+#b) Elimine las variables de valor unico, es decir, las variables Apellido y IdCuenta
 datos <- datos[, -c(1,4,2,7)]
 datos <- na.omit(datos)
 str(datos)
@@ -26,16 +38,23 @@ datos$DejaBanco <- factor(datos$DejaBanco, ordered = T)
 str(datos)
 
 
-# D) El objetivo de este ejercicio es calibrar el metodo de ADA para esta Tabla de Datos. Aqui
-# interesa predecir en la variable DejaBanco que indica si el cliente deja sus negocios con
-# el banco (1) o no (0). Para esto genere 5 Validaciones Cruzadas con 10 grupos calibrando
-# el modelo de acuerdo con los tres tipos de algoritmos que permite, discrete, real
-# y gentle. Para medir la calidad de metodo sume la cantidad de 1’s detectados en los
-# diferentes grupos. Luego grafique las 5 iteraciones para los tres algoritmos en el mismo
-# grafico. ¿Se puede determinar con claridad cual algoritmo es el mejor? Para generar los
-# modelos predictivos use el paquete traineR.
+
+```
 
 
+
+D) El objetivo de este ejercicio es calibrar el metodo de ADA para esta Tabla de Datos. Aqui
+interesa predecir en la variable DejaBanco que indica si el cliente deja sus negocios con
+el banco (1) o no (0). Para esto genere 5 Validaciones Cruzadas con 10 grupos calibrando
+el modelo de acuerdo con los tres tipos de algoritmos que permite, discrete, real
+y gentle. Para medir la calidad de metodo sume la cantidad de 1’s detectados en los
+diferentes grupos. Luego grafique las 5 iteraciones para los tres algoritmos en el mismo
+grafico. ¿Se puede determinar con claridad cual algoritmo es el mejor? Para generar los
+modelos predictivos use el paquete traineR.
+
+```{r}
+library(caret)
+library(traineR)
 summary(datos)
 numero.filas <- nrow(datos)
 cantidad.validacion.cruzada <- 5
@@ -94,15 +113,19 @@ matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
         col = rainbow(ncol(resultados)))
 legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+```
 
 
 
 
 
-# e) Repita el ejercicio anterior, pero esta vez en lugar de sumar la cantidad de 1’s, promedie los
-# errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones
-# para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
-# algoritmo es el mejor?
+e) Repita el ejercicio anterior, pero esta vez en lugar de sumar la cantidad de 1’s, promedie los
+errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones
+para los tres algoritmos en el mismo grafico. ¿Se puede determinar con claridad cual
+algoritmo es el mejor?
+
+```{r}
+
 
 #calculo de indices
 indices.general <- function(MC) {
@@ -116,7 +139,8 @@ indices.general <- function(MC) {
   return(res)
 }
 
-
+library(caret)
+library(traineR)
 datos <- read.csv("Datos_Churn.csv",header=TRUE, sep=",", dec=".")
 
 datos <- datos[, -c(1,4,2,7)]
@@ -197,9 +221,8 @@ legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 
 
-#R/
-# El Analizar el error global se obtiene un menor error global con el algoritmo de gentle
-  
+
+```
 
 
-
+## El Analizar el error global se obtiene un menor error global con el algoritmo de gentle
