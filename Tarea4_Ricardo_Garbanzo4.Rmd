@@ -1,17 +1,18 @@
-#Ejercicio 4
-# Esta pregunta tambi´en utiliza los datos Datos Churn.csv. Usando el paquete
-# traineR realice lo siguiente:
+---
+title: "Tarea4_Ricardo_Garbanzo4"
+output: html_document
+---
 
-# a) El objetivo de este ejercicio es comparar todos los metodos predictivos vistos en el curso con
-# esta tabla de datos. Aquı interesa predecir en la variable DejaBanco que indica si el cliente
-# deja sus negocios con el banco (1) o no (0), para esto genere 5 Validaciones Cruzadas con
-# 10 grupos para los metodos SVM, KNN, Arboles, Bosques, Potenciacion, eXtreme
-# Gradient Boosting, Bayes y Redes Neuronales (con los paquetes vistos en clase), para
-# KNN y Potenciacion use los parametros obtenidos en las calibraciones realizadas en los
-# ejercicios anteriores. Luego grafique las 5 iteraciones para todos los metodos en el mismo
-# grafico. ¿Se puede determinar con claridad cual metodos es el mejor?
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+# Ejercicio 4
+Esta pregunta tambien utiliza los datos Datos Churn.csv. Usando el paquete traineR realice lo siguiente:
 
+a) El objetivo de este ejercicio es comparar todos los metodos predictivos vistos en el curso con esta tabla de datos. Aquı interesa predecir en la variable DejaBanco que indica si el cliente deja sus negocios con el banco (1) o no (0), para esto genere 5 Validaciones Cruzadas con 10 grupos para los metodos SVM, KNN, Arboles, Bosques, Potenciacion, eXtreme Gradient Boosting, Bayes y Redes Neuronales (con los paquetes vistos en clase), para KNN y Potenciacion use los parametros obtenidos en las calibraciones realizadas en los ejercicios anteriores. Luego grafique las 5 iteraciones para todos los metodos en el mismo grafico. ¿Se puede determinar con claridad cual metodos es el mejor?
+
+```{r }
 library(caret)
 library(traineR)
 
@@ -26,8 +27,8 @@ str(datos)
 summary(datos)
 
 numero.filas <- nrow(datos)
-cantidad.validacion.cruzada <- 2
-cantidad.grupos <- 3
+cantidad.validacion.cruzada <- 5
+cantidad.grupos <- 10
 
 deteccion.no.svm <- c()
 deteccion.no.knn <- c()
@@ -134,16 +135,13 @@ matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
 legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
 
+```
+# Respuesta: El mejor método encontrado es el de potenciacion.Sin embargo tiene muchas similitud con árboles de decision.
 
+# Punto B
+Repita el ejercicio anterior, pero en lugar de sumar la cantidad de 1’s, promedie los errores globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones para todos los metodos vistos en el curso en el mismo grafico. ¿Se puede determinar con claridad cual algoritmo es el mejor?
 
-
-#Punto B
-# Repita el ejercicio anterior, pero en lugar de sumar la cantidad de 1’s, promedie los errores
-# globales cometidos en los diferentes grupos (folds). Luego grafique las 5 iteraciones para
-# todos los metodos vistos en el curso en el mismo grafico. ¿Se puede determinar con claridad
-# cual algoritmo es el mejor?
-
-
+```{r }
 datos <- read.csv("Datos_Churn.csv", header=TRUE, sep=",", dec=".")
 datos <- datos[, -c(1,4,2,7)]
 datos <- na.omit(datos)
@@ -268,25 +266,23 @@ matplot(resultados, type="b", lty = 1, lwd = 1, pch = 1:ncol(resultados),
         col = rainbow(ncol(resultados)))
 legend(par('usr')[2], par('usr')[4], legend = colnames(resultados),bty='n', xpd=NA, cex = 0.8,
        pch=1:ncol(resultados), col = rainbow(ncol(resultados))) # La leyenda
+```
 
 
 
-#Punto C
-#La comparación de error y el si deja banco permite observar que los métodos de Potenciacion y árboles
-#son los mejores para el caso Data Churn
+
+# Punto C
+La comparación de error y el si deja banco permite observar que los métodos de Potenciacion y árboles son los mejores para el caso Data Churn
+
 
 
 
 
 # Punto D
-# Encuentre el mejor modelo usando el paquete caret. Para esto compare los metodos SVM,
-# KNN, Arboles, Bosques, Potenciacion, eXtreme Gradient Boosting, Bayes y
-# Regresion Logıstica. Para esto genere muestras de entrenamiento y testing usando
-# la funcion createDataPartition(...), luego genere los modelos usando las funciones
-# trainControl(...) y train(...) con validacion cruzada de 10 grupos y usando como criterio
-# (metrica de calidad) la precision global (Accuracy). Usando la funcion
-# indices.general(...) determine cual es el mejor metodo.
 
+Encuentre el mejor modelo usando el paquete caret. Para esto compare los metodos SVM, KNN, Arboles, Bosques, Potenciacion, eXtreme Gradient Boosting, Bayes y Regresion Logıstica. Para esto genere muestras de entrenamiento y testing usando la funcion createDataPartition(...), luego genere los modelos usando las funciones trainControl(...) y train(...) con validacion cruzada de 10 grupos y usando como criterio (metrica de calidad) la precision global (Accuracy). Usando la funcion indices.general(...) determine cual es el mejor metodo.
+
+```{r}
 #calculo de indices
 indices.general <- function(MC) {
   precision.global <- sum(diag(MC))/sum(MC)
@@ -302,6 +298,9 @@ indices.general <- function(MC) {
 
 library(caret)
 library(traineR)
+library(kernlab)
+library(fastAdaboost)
+library(naivebayes)
 
 datos <- read.csv("Datos_Churn.csv", header=TRUE, sep=",", dec=".")
 datos <- datos[, -c(1,4,2,7)]
@@ -329,12 +328,12 @@ tabla.validacion <- datos[-muestra,]
 # Generalized Linear Model = “glm”
 
 # Validación cruzada con 10 folds
-control <- trainControl(method = "cv", number = 2)
+control <- trainControl(method = "cv", number = 10)
 
 svmRadial.model <- train(DejaBanco~., data = tabla.datos.vc, method = "svmRadial",trControl = control, metric = "Accuracy", verbose = FALSE)
 kknn.model <- train(DejaBanco~., data = tabla.datos.vc, method = "kknn",trControl = control, metric = "Accuracy", verbose = FALSE)
 rpart.model <- train(DejaBanco~., data = tabla.datos.vc, method = "rpart",trControl = control, metric = "Accuracy")
-adaboost.model <- train(DejaBanco~., data = tabla.datos.vc, method = "adaboost",trControl = control, metric = "Accuracy", verbose = FALSE)
+#adaboost.model <- train(DejaBanco~., data = tabla.datos.vc, method = "adaboost",trControl = control, metric = "Accuracy", verbose = FALSE)
 boosting.model <- train(DejaBanco~., data = tabla.datos.vc, method = "xgbTree",trControl = control, metric = "Accuracy", verbose = FALSE)
 naive_bayes.model <- train(DejaBanco~., data = tabla.datos.vc, method = "naive_bayes",trControl = control, metric = "Accuracy", verbose = FALSE)
 glm.model <- train(DejaBanco~., data = tabla.datos.vc, method = "glm",trControl = control, metric = "Accuracy")
@@ -355,10 +354,10 @@ MC <- table(tabla.validacion$DejaBanco,prediccion.rpart)
 rpart.ind <- indices.general(MC)
 rpart.ind$`Precisión Global`
 
-prediccion.adaboost <- predict(adaboost.model, tabla.validacion[,-9])
-MC <- table(tabla.validacion$DejaBanco,prediccion.adaboost)
-adaboost.ind <- indices.general(MC)
-adaboost.ind$`Precisión Global`
+# prediccion.adaboost <- predict(adaboost.model, tabla.validacion[,-9])
+# MC <- table(tabla.validacion$DejaBanco,prediccion.adaboost)
+# adaboost.ind <- indices.general(MC)
+# adaboost.ind$`Precisión Global`
 
 prediccion.xgbTree <- predict(boosting.model, tabla.validacion[,-9])
 MC <- table(tabla.validacion$DejaBanco,prediccion.xgbTree)
@@ -374,22 +373,6 @@ prediccion.glm <- predict(glm.model, tabla.validacion[,-9])
 MC <- table(tabla.validacion$DejaBanco,prediccion.glm)
 glm.ind <- indices.general(MC)
 glm.ind$`Precisión Global`
+```
 
-
-# Respuesta, Según la precision gloabal el mejor método obtenido es el de boosting con una precision global del 86%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Respuesta, Según la precision gloabal el mejor método obtenido es el de XG boosting con una precision global del 86%
